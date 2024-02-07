@@ -1,7 +1,6 @@
 const express = require("express");
 const http = require('http');
 const cors = require('cors')
-
 const app = express();
 const server = http.createServer(app);
 app.use(cors())
@@ -12,7 +11,9 @@ const io = new Server(server, {
   }
 });
 const port = 3000;
-const port2 =3001 
+const port2 =3001 ;
+const playerInfos = []
+let count_player = 0
 
 svListening = app.listen(port, () => {
   console.log(`Server running at <http://localhost>:${port}/`);
@@ -34,25 +35,23 @@ app.use(express.json());
 app.post('/game', async(req, res) => {
     const state = req.body
     console.log(state)
-    io.on('connection', client => {
-      io.sockets.emit('new-message', state)
-      console.log('emit')
-  });
-   
+    io.sockets.emit('new-message', state)
+    console.log('emit')
     res.sendStatus(200)
   });
   // รอการ connect จาก client
   io.on('connection', client => {
-      console.log('user connected')
-    
+      console.log(`user connected ${client.id}`)
+      info  = {socket:client.id,playerSeq:count_player}
+      playerInfos.push(info)
+      console.log(info)
       // เมื่อ Client ตัดการเชื่อมต่อ
       client.on('disconnect', () => {
           console.log('user disconnected')
       })
-  
-      // ส่งข้อมูลไปยัง Client ทุกตัวที่เขื่อมต่อแบบ Realtime
-      client.on('sent-message', function (message) {
-          io.sockets.emit('new-message', message)
+
+      client.on('sent-message-server', function (message) {
+        io.sockets.emit('new-message-server', message)
       })
   });
 
